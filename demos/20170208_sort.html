@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style></style>
+  </head>
+  <body>
+  <script>
+   
+   function makeArr(n){
+       n = n<2 ? 10 : n;
+	   var arr = [];
+	   for(var i=0;i<n;i++){
+	      arr.push(Math.floor(Math.random()*100)+1);
+	   }
+	   return arr;
+   }
+  
+  
+   function bubblesort(arr){
+	   var len = arr.length;
+	   var tmp,i,j,change;
+	   for(i=0;i<len-1;i++){ //循环总次数
+		  change=0;
+		  for(j=0;j<len-i-1;j++){ //内循环,循环次数为总数-外循环次数
+			 if(arr[j]<arr[j+1]){ //比较相邻两个元素
+				tmp = arr[j];
+				arr[j] = arr[j+1];
+				arr[j+1] = tmp;
+				change=1;
+			 }
+		  }
+		  if(!change) break; //如果没有变化,就不用排序了
+	   }
+	   return arr;
+   }
+   
+   
+   function selectionsort(arr){
+      var len = arr.length;
+	  var max,tmp;
+      for(var i=0;i<len-1;i++){
+	     max = i;
+		 for(var j=i+1;j<len;j++){
+		    if(arr[max]<arr[j]){
+			  max = j;
+			}
+		 }
+		 if(max!=i){
+		    tmp = arr[i];
+			arr[i] = arr[max];
+			arr[max] = tmp;
+		 }
+	  }
+	  return arr;
+   }
+   
+   var timer = (function(){
+      var t1,t2;
+      function start(){
+	     t1 = Date.now();
+	  }
+	  function end(t){
+	     t2 = Date.now();
+		 document.write('<hr/>'+t+'耗时: '+(t2-t1)+'ms');
+	  }
+	  
+      return {
+	     start:start,
+		 end:end
+	  }
+   })();
+   
+   
+   var arr = makeArr(50);
+   var arrstr = JSON.stringify(arr);
+   document.write('原始数据: '+arr.join(','));
+   
+   timer.start();
+   var sortarr = bubblesort(JSON.parse(arrstr));
+   timer.end('冒泡排序');
+   document.write('<hr/>冒泡排序: '+sortarr.join(','));
+   
+  
+   
+   timer.start();
+   var sortarr = selectionsort(JSON.parse(arrstr));
+   timer.end('选择排序');
+   document.write('<hr/>选择排序: '+sortarr.join(',')); 
+
+
+
+   
+  </script>
+  </body>
+</html>
