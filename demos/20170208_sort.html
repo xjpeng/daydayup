@@ -8,6 +8,22 @@
   </head>
   <body>
   <script>
+  
+   var timer = (function(){
+      var t1,t2;
+      function start(){
+	     t1 = Date.now();
+	  }
+	  function end(t){
+	     t2 = Date.now();
+		 document.write('<hr/>'+t+'耗时: '+(t2-t1)+'ms');
+	  }
+	  
+      return {
+	     start:start,
+		 end:end
+	  }
+   })();
    
    function makeArr(n){
        n = n<2 ? 10 : n;
@@ -57,24 +73,29 @@
 	  return arr;
    }
    
-   var timer = (function(){
-      var t1,t2;
-      function start(){
-	     t1 = Date.now();
-	  }
-	  function end(t){
-	     t2 = Date.now();
-		 document.write('<hr/>'+t+'耗时: '+(t2-t1)+'ms');
-	  }
-	  
-      return {
-	     start:start,
-		 end:end
-	  }
-   })();
    
+     function insertionsort(arr){
+        var len = arr.length;
+		var i, j,t,change;
+		for(i = 1; i < len; i++){
+		        t = arr[i];
+				change=0;
+				for(j = i-1; j >=0; j--){
+					if(arr[j] < t){
+						arr[j+1] = arr[j];
+						change=1;
+					}else{
+						break;
+					}
+				}
+				if(change)arr[j+1] = t;
+		}
+      return arr;
+   }
+
    
-   var arr = makeArr(50);
+
+   var arr = makeArr(30);
    var arrstr = JSON.stringify(arr);
    document.write('原始数据: '+arr.join(','));
    
@@ -83,14 +104,15 @@
    timer.end('冒泡排序');
    document.write('<hr/>冒泡排序: '+sortarr.join(','));
    
-  
-   
    timer.start();
    var sortarr = selectionsort(JSON.parse(arrstr));
    timer.end('选择排序');
    document.write('<hr/>选择排序: '+sortarr.join(',')); 
 
-
+   timer.start();
+   var sortarr = insertionsort(JSON.parse(arrstr));
+   timer.end('插入排序');
+   document.write('<hr/>插入排序: '+sortarr.join(',')); 
 
    
   </script>
