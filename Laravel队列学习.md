@@ -1,4 +1,4 @@
-#Laravel队列学习
+# Laravel队列学习
 
 
 ## 配置
@@ -14,22 +14,22 @@
 - database
 - redis
 
-####null驱动
+#### null驱动
 
 放弃队列任务
 
-####sync驱动
+#### sync驱动
 
 会立即执行,不支持延时执行,并可以调试打印job结果
 
-####databse驱动
+#### databse驱动
 
 首先建立数据表
 php artisan queue:table
 
 按队列顺序执行,支持延时执行
 
-####redis驱动
+#### redis驱动
 
 会在 redis里建立 queues:(queuename?):delayed?
 
@@ -51,7 +51,7 @@ php partisan queue:work --queue=myqueue
 
 php partisan queue:work --queue=myqueue,default
 
-###运行选项
+### 运行选项
 - --queue=default 
 - --tries=0  
 - --timeout=60  
