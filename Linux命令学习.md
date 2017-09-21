@@ -1,6 +1,10 @@
-#Linux命令学习
+#Linux鍛戒护瀛︿範
 
-##添加用户
+### 娣诲姞鐢ㄦ埛
 useradd testuser
-##修改密码
+
+### 淇敼瀵嗙爜
 passwd testuser
+
+### 涓存椂鍒囨崲鐢ㄦ埛
+su root
