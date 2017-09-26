@@ -49,7 +49,7 @@
 
 ***闭包方式不能使用队列***
 
-只需要吧监听器类继承ShouldQueue接口即可,前提是队列进程queue:work在运行
+只需要把监听器类继承ShouldQueue接口即可,前提是队列进程queue:work在运行
 
 	use Illuminate\Contracts\Queue\ShouldQueue;
 	
