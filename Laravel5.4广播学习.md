@@ -103,6 +103,8 @@ Laravel广播只能实现服务器到客户端单方面的实时通讯,客户端
     npm run dev
 
 ###模板
+
+
     <!--index.blade.php -->
 	<!DOCTYPE html>
 	<html>
@@ -119,7 +121,9 @@ Laravel广播只能实现服务器到客户端单方面的实时通讯,客户端
 	  </body>
 	</html>
 
+
 ## 事件类配置
+
     //app/Events/WebSocketEvent.php
 
 	namespace App\Events;
@@ -178,6 +182,7 @@ Laravel广播只能实现服务器到客户端单方面的实时通讯,客户端
 
 
 ## 发送广播
+
     //使用全局函数event
 	event(new WebSocketEvent());
     //使用全局函数broadcast
