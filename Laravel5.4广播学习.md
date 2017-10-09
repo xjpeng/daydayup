@@ -54,6 +54,7 @@ Laravel广播只能实现服务器到客户端单方面的实时通讯,客户端
     larave-echo-server start
 
 ###laravel-echo安装与运行
+
 	//三种方式安装,总有一种可以安装成功
     npm install laravel-echo
 	cnpm install laravel-echo
@@ -96,9 +97,11 @@ Laravel广播只能实现服务器到客户端单方面的实时通讯,客户端
 	document.body.appendChild(ele);
 
 ###打包前端
+
     //webpack打包生成
     //开发模式
     npm run dev
+
 ###模板
     <!--index.blade.php -->
 	<!DOCTYPE html>
