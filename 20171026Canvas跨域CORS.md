@@ -2,7 +2,7 @@
 
 ### 问题描述
 
-在使用cropit截图是出现The operation is insecure问题
+在使用cropit截图时出现The operation is insecure问题
 
 ### 解决办法
 
