@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style>
+	 [v-cloak]{display:none;}
+	</style>
+  </head>
+  <body>
+  <div id="app"></div>
+  <script type="text/x-template" id="appt">
+    <div id="app">
+		<h1>Shopping Cart Example</h1>
+		<hr>
+		<h2>Products</h2>
+		<product-list></product-list>
+		<hr>
+		<cart></cart>
+	</div>
+  </script>	
+  
+  <script type="text/x-template" id="productt">
+    <ul>
+    <li v-for="p in products">
+      {{ p.title }} - {{p.inventory}} - {{ p.price | currency }}
+      <br>
+      <button v-bind:disabled="!p.inventory" v-on:click="addToCart(p)">
+        Add to cart
+      </button>
+    </li>
+  </ul>
+  </script>	
+  
+   <script type="text/x-template" id="cartt">
+  <div class="cart">
+    <h2>Your Cart</h2>
+    <p v-show="!products.length"><i>Please add some products to cart.</i></p>
+    <ul>
+      <li v-for="p in products">
+        {{ p.title }} - {{ p.price | currency }} 
+	  <button style="margin-left:20px;" v-bind:disabled="p.quantity==p.total" v-on:click="incr(p)">+</button>
+	  {{ p.quantity }}
+	  <button v-bind:disabled="!p.quantity" v-on:click="decr(p)">-</button>
+      </li>
+    </ul>
+    <p>Total: {{ total | currency }}</p>
+    <p><button :disabled="!products.length" @click="checkout(products)">Checkout</button></p>
+    <p v-show="checkoutStatus">Checkout {{ checkoutStatus }}.</p>
+  </div>
+  </script>	
+  
+  <script src="https://cdn.bootcss.com/vue/2.5.8/vue.js"></script>
+  <script src="https://cdn.bootcss.com/vuex/3.0.1/vuex.js"></script>
+  <script>
+  
+    Vue.filter('currency', function(value, currency, decimals) {
+	  value = parseFloat(value)
+	  if (!isFinite(value) || (!value && value !== 0)) return ''
+	  currency = currency != null ? currency : '$'
+	  decimals = decimals != null ? decimals : 2
+	  var stringified = Math.abs(value).toFixed(decimals)
+	  var _int = decimals
+		? stringified.slice(0, -1 - decimals)
+		: stringified
+	  var i = _int.length % 3
+	  var head = i > 0
+		? (_int.slice(0, i) + (_int.length > 3 ? ',' : ''))
+		: ''
+	  var _float = decimals
+		? stringified.slice(-1 - decimals)
+		: ''
+	  var sign = value < 0 ? '-' : ''
+	  return sign + currency + head +
+		_int.slice(i).replace(/(\d{3})(?=\d)/g, '$1,') +
+		_float
+	});
+	
+	
+	var store = new Vuex.Store({
+	    modules:{
+		   products:{
+		      namespaced:true,
+		      state:{
+			     all:[]
+			  },
+			  mutations:{
+			     setall(state,products){
+				   state.all = products;
+				 },
+				 buy(state,id){
+				    let pro = state.all.find((v)=>v.id==id);
+				    pro.inventory--;
+				 },
+				 add(state,id){
+				 	let pro = state.all.find((v)=>v.id==id);
+				    pro.inventory++;
+				 },
+				 update(state,products){
+				   products.forEach((v)=>{
+				      let prod = state.all.find((v1)=>v1.id==v.id);
+					  prod.total = prod.total-v.quantity;
+				   });
+				 }
+			  },
+			  actions:{
+			     getProducts({commit}){
+				    setTimeout(()=>{
+					  commit('setall',[
+					      {"id": 1, "title": "iPad 4 Mini", "price": 500.01, "inventory": 2,"total":2},
+						  {"id": 2, "title": "H&M T-Shirt White", "price": 10.99, "inventory": 10,"total":10},
+						  {"id": 3, "title": "Charli XCX - Sucker CD", "price": 19.99, "inventory": 5,"total":5}
+					  ]);
+					},300);
+				 },
+				 addToCart({commit},product){
+				    if(product.inventory>0){
+					   commit('buy',product.id);
+					   commit('cart/add',product,{root:true});
+					}
+				 }
+			  }
+		   }
+		   ,cart:{
+		      namespaced:true,
+		      state:{
+			     added:[],
+				 checkoutStatus: null
+			  },
+			  actions:{
+			     checkout({commit},products){
+				    commit('checkout');
+					commit('products/update',products,{root:true});
+				 },
+				 incr({state,commit},product){
+				 	let pro = state.added.find((v)=>v.id==product.id);
+				    if(pro.quantity<pro.total){
+					    commit('incr',pro);
+						commit('products/buy',pro.id,{root:true});
+					}
+				 },
+				 decr({state,commit},product){
+				    let pro = state.added.findIndex((v)=>v.id==product.id);
+				    if(state.added[pro].quantity){
+					    let id = state.added[pro].id;
+					    commit('decr',pro);
+						commit('products/add',id,{root:true});
+					}
+				 }
+			  },
+			  mutations:{
+			     incr(state,prod){
+					 prod.quantity++;
+				 },
+				 decr(state,index){
+					 state.added[index].quantity--;
+					 if(!state.added[index].quantity){
+					   state.added.splice(index,1);
+					 }
+				 },
+			     checkout(state){
+				   state.added=[];
+				   state.checkoutStatus='successful';
+				 },
+			     add(state,prod){
+				    let pro = state.added.find((v)=>v.id==prod.id);
+					if(pro){
+					   pro.quantity++;
+					}else{
+					   state.added.push({
+					          id:prod.id,
+					          title: prod.title,
+							  price: prod.price,
+							  quantity:1,
+							  total:prod.total
+					   })
+					}
+				 }
+			  }
+		   }
+		}
+	});
+	
+	
+	var v = new Vue({
+	   el:'#app',
+	   store,
+	   template:'#appt',
+	   components:{
+	      productList:{
+		     template:'#productt',
+			 computed:{
+			    ...Vuex.mapState('products',{products:'all'})
+			 },
+			 created(){
+			    this.$store.dispatch('products/getProducts');
+			 },
+			 methods:{
+                ...Vuex.mapActions('products',['addToCart']),
+			 }
+		  },
+		  cart:{
+		     template:'#cartt',
+			 computed:{
+			    ...Vuex.mapState('cart',{
+				  products:'added',
+				  checkoutStatus:'checkoutStatus'
+				}),
+				 total () {
+				  return this.products.reduce((total, p) => {
+					return total + p.price * p.quantity
+				  }, 0)
+				}
+			 },
+			   methods: {
+				checkout (products) {
+				  this.$store.dispatch('cart/checkout',products)
+				},
+				incr(product){
+				   this.$store.dispatch('cart/incr',product);
+				},
+				decr(product){
+				   this.$store.dispatch('cart/decr',product);
+				}
+			  }
+		  }
+	   }
+	});
+  </script>
+  </body>
+</html>
