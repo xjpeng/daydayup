@@ -8,6 +8,8 @@
 
 修改node_modules/laravel-mix/src/builder/webpack-rules.js
 
+yarn add url-loader  --dev
+
     rules.push({
         test: /\.(png|jpe?g|gif)$/,
         loaders: [
