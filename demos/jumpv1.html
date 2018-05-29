@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style>
+	body{margin:0;}
+	canvas{display:block;background-color:rgba(255,255,0,.3);}
+	.scorebox{position:absolute;left:0;top:0;}
+	.cover{
+	   position:absolute;
+	   display:none;
+	   left:0;
+	   top:0;
+	   right:0;
+	   bottom:0;
+	   background-color:rgba(0,0,0,.5)
+	}
+	.inner{
+	   position:absolute;
+	   left:50%;
+	   top:50%;
+	   width:100px;
+	   height:100px;
+	   background-color:#fff;
+	   text-align:center;
+	   margin-left:-50px;
+	   margin-top:-50px;
+	}
+	
+	</style>
+  </head>
+  <body>
+   <canvas id="canvas" width="375" height="667"></canvas>
+   <div class="scorebox">Score:<span id="score">0</span></div>
+   <div class="cover" id="cover">
+      <div class="inner">
+      <p id="result">分数:</p>
+      <button onclick="restart();">重玩</button>
+	  </div>
+   </div>
+   <script src="https://cdn.bootcss.com/EaselJS/1.0.2/easeljs.js"></script>
+   <script>
+    var ww = window.innerWidth;
+    var wh = window.innerHeight;
+	var canvas = document.getElementById('canvas');
+	var scoreel = document.getElementById('score');
+	var cover = document.getElementById('cover');
+	var result = document.getElementById('result');
+    canvas.width=ww;
+	canvas.height=wh;
+    var stage = new createjs.Stage(canvas);
+	createjs.Touch.enable(stage);
+    //创建一个形状的显示对象
+
+	var box = new createjs.Container();
+	box.x = box.y = 0;
+	
+	
+	
+    var circle = new createjs.Shape();
+    circle.graphics.beginFill("red").drawCircle(0, 0, 20);
+    circle.x = 100;
+	circle.y = Math.round(wh/2+50);
+	
+	box.addChild(circle);
+	stage.addChild(box);
+	
+	createjs.Ticker.addEventListener("tick", function(event){
+	   stage.update(event);
+	});
+	
+	var next_step = null;
+	var next_obj = null;
+	
+	function createStep(){
+	    var colors = ['#00a300','#9f00a7','#ffc40d','#2d89ef'];
+		var color = colors[Math.floor(Math.random()*colors.length)];
+		var radius = Math.ceil(Math.random()*20)+25;
+		var diameter = radius *2;
+		next_obj = new createjs.Container();
+		next_step = new createjs.Shape();
+		next_step.double = false;
+		next_step.radius = radius;
+        next_step.graphics.beginFill(color).drawCircle(0, 0, radius);
+		if(radius<30){
+		  next_step.score = 5;
+		}else if(radius<35){
+		  next_step.score = 3;
+		}else if(radius<40){
+		  next_step.score = 2;
+		}else{
+		  next_step.score = 1;
+		}
+		var x,y,tx=0;
+		if(circle.x<ww-radius*4){
+		   x = Math.floor(Math.random()*(ww-circle.x));
+		   next_step.x = circle.x+x;
+		   if(next_step.x>ww-diameter){
+		       next_step.x = ww-diameter;
+			   tx = next_step.x;
+			   x = next_step.x-circle.x;
+		   }else if(next_step.x<circle.x+diameter){
+		       next_step.x = circle.x+diameter;
+			   x = next_step.x-circle.x;
+		   }
+		}else{
+		   x = Math.floor(Math.random()*circle.x);
+		   next_step.x = circle.x-x;		   
+		   if(next_step.x>circle.x-diameter){
+		      next_step.x = circle.x-diameter;
+			  x = circle.x-next_step.x;
+		   }else if(next_step.x<diameter){
+		      next_step.x = diameter;
+			  x = circle.x-next_step.x;
+		   }
+		} 
+		y = Math.round(Math.abs(Math.tan(30*Math.PI/180)*x));
+		next_step.y = circle.y-y;
+		var disx = next_step.x-circle.x;
+		var disy = next_step.y-circle.y;
+		var rad = Math.atan2(disy,disx);
+		dy = y;
+		if(Math.abs(circle.x - next_step.x)>ww/2){
+		   var text = new createjs.Text("+ "+next_step.score+' x3', "16px Arial", "#ff0000");
+		   next_step.double = 3;
+		}else if(Math.abs(circle.x - next_step.x)>ww/3){
+		   var text = new createjs.Text("+ "+next_step.score+' x2', "16px Arial", "#ff0000");
+		   next_step.double = 2;
+		}else{
+		   var text = new createjs.Text("+ "+next_step.score, "16px Arial", "#ff0000");
+		   next_step.double = 1;
+		}
+		text.name = 'text';
+		text.visible = false;
+		if(tx){
+		    text.x = tx+10;
+			text.y = next_step.y-radius-20;
+		}else{
+			text.x = next_step.x+radius;
+			text.y = next_step.y-radius-5;
+		}
+		
+		next_obj.addChild(next_step,text);
+		box.addChildAt(next_obj,0);
+		vx = Math.cos(rad);
+		vy = Math.sin(rad);
+	}
+	
+	createStep();
+	//y=ax²+bx+c
+    //b = (y-ax2)/x
+	var vx;
+    var vy;
+	var dy;
+	var score=0;
+	var speed = 5;
+	var inix = circle.x;
+	var iniy = circle.y;
+	var candown = true;
+	stage.on('stagemousedown',function(){
+	     if(!candown) return;
+	     this.mousedowning = true;
+         addspeed();
+	});
+    stage.on('stagemouseup',function(){
+	    if(!candown) return;
+	    this.mousedowning = false;
+		if(circle.x+20<=next_step.x+next_step.radius && circle.x-20>=next_step.x-next_step.radius 
+		   && circle.y+20<=next_step.y+next_step.radius && circle.y-20>=next_step.y-next_step.radius){
+		     	 candown = false;
+			     score +=next_step.score*next_step.double;
+				 scoreel.innerHTML = score;
+				 var text = next_obj.getChildByName('text');
+				 text.visible = true;
+				 var fade = setInterval(function(){
+				    text.alpha-=0.1;
+					text.y-=1;
+					if(text.alpha<=0){
+					   clearInterval(fade);
+					   box.removeChildAt(0);
+						createStep();
+						var t1,ymax = box.y+dy;
+						setTimeout(function(){
+							 t1 = setInterval(function(){
+								if(box.y>=ymax) {
+								   clearInterval(t1);
+								   candown = true;
+								}
+								box.y++;
+							 },13);
+							 
+						},300);
+					}
+				 },50);
+		   
+		   }else{
+		   		candown = false;
+			    result.innerHTML = '分数:'+score;
+			    cover.style.display='block';
+		   }
+	});
+	
+	function addspeed(){
+	   if(stage.mousedowning){
+	   	  stage.raf = requestAnimationFrame(addspeed);
+	      circle.x += vx*speed;
+		  circle.y += vy*speed;
+		  if(circle.x>ww || circle.x<0){
+			     cancelAnimationFrame(stage.raf);
+				 candown = false;
+				 result.innerHTML = '分数:'+score;
+			     cover.style.display='block';
+			  }
+		  
+	   }else{
+		   cancelAnimationFrame(stage.raf);
+	   }
+	}
+	
+	function restart(){
+	   circle.x = 100;
+	   circle.y = wh/2+50;
+	   inix = circle.x;
+	   iniy = circle.y;
+	   box.y=0;
+	   score=0;
+	   candown = true;
+	   scoreel.innerHTML = score;
+		box.removeChildAt(0);
+		createStep();
+		cover.style.display='none';
+	}
+	
+	
+   </script>
+  </body>
+</html>

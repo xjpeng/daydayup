@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style>
+	body{margin:0;}
+	canvas{display:block;background-color:rgba(255,255,0,.3);}
+    .scorebox{position:absolute;left:0;top:0;}
+	.cover{
+	   position:absolute;
+	   display:none;
+	   left:0;
+	   top:0;
+	   right:0;
+	   bottom:0;
+	   background-color:rgba(0,0,0,.5)
+	}
+	.inner{
+	   position:absolute;
+	   left:50%;
+	   top:50%;
+	   width:100px;
+	   height:100px;
+	   background-color:#fff;
+	   text-align:center;
+	   margin-left:-50px;
+	   margin-top:-50px;
+	}
+	</style>
+  </head>
+  <body>
+   <canvas id="canvas" width="375" height="667"></canvas>
+    <div class="scorebox">Level:<span id="level">1</span>&nbsp;&nbsp;Score:<span id="score">0</span></div>
+   <div class="cover" id="cover">
+      <div class="inner">
+      <p id="result">分数:</p>
+      <button onclick="restart();">重玩</button>
+	  </div>
+   </div>
+   <script src="https://cdn.bootcss.com/EaselJS/1.0.2/easeljs.js"></script>
+   <script src="https://cdn.bootcss.com/tweenjs/1.0.2/tweenjs.min.js"></script>
+   <script>
+    var ww = window.innerWidth;
+    var wh = window.innerHeight;
+	var canvas = document.getElementById('canvas');
+	var scoreel = document.getElementById('score');
+	var levelel = document.getElementById('level');
+	var cover = document.getElementById('cover');
+	var result = document.getElementById('result');
+    canvas.width=ww;
+	canvas.height=wh;
+    var stage = new createjs.Stage(canvas);
+	createjs.Touch.enable(stage);
+	createjs.Ticker.addEventListener("tick", function(){
+		stage.update();
+	});
+	
+    //创建一个形状的显示对象
+    var img = new Image;
+	img.src="./bg.jpg";
+
+	var bgbox = new createjs.Container();
+	bgbox.x = bgbox.y = 0;
+	var hero;
+	var score=0;
+	var enemies = [];
+    var bgraf;
+	var gameover = false;
+	var level = 1;
+	var levelup =false;
+	
+	img.onload = function(){
+	
+		var tpbg = new createjs.Shape();
+		tpbg.graphics.beginBitmapFill(img).drawRect(0, 0, ww, wh*2);
+		tpbg.y=-wh;
+
+		bgbox.addChild(tpbg.clone(),tpbg.clone());
+		
+		
+	    window.runbg = function(){
+		bgraf = requestAnimationFrame(window.runbg);
+		 var bg = bgbox.getChildAt(1);
+		 var bg2 = bgbox.getChildAt(0);
+			bg.y+=1;
+			if(bg.y>=0){
+			   bg2.y+=1;
+			   if(bg.y>wh){
+				  bgbox.removeChild(bg);
+				  bgbox.addChildAt(tpbg.clone(),0);
+			   }
+			}
+	    }
+		window.runbg();
+		stage.addChild(bgbox);
+		
+		
+		hero = new createjs.Shape();
+		hero.graphics.beginFill('yellow').drawCircle(0, 0, 20);
+		hero.x= Math.round(ww/2);
+		hero.y= hero.y= wh-Math.ceil(Math.random()*100)-100;
+		stage.addChild(hero);
+		
+		var touchbox = new createjs.Shape();
+		touchbox.graphics.beginFill('#000000').drawRect(0, 0, ww,wh);
+		touchbox.alpha=0.01;
+		touchbox.x= 0;
+		touchbox.y= 0;
+		stage.addChild(touchbox);
+		
+	    touchbox.on("mousedown",function(evt){
+		    if(gameover) return;
+		    this.evtok = false;
+			var that = this;
+			createjs.Tween.get(hero).to({x:evt.stageX,y:evt.stageY},200).call(function(){
+			   that.evtok = true;
+			   that.offset = {x: hero.x - evt.stageX, y: hero.y - evt.stageY};
+			});
+		});
+	    touchbox.on("pressmove",function(evt){
+		    if(gameover) return;
+		    if(!this.evtok) return;
+			var x = evt.stageX + this.offset.x;
+			var y = evt.stageY + this.offset.y;
+			if(x<0)x = 0;
+			if(x>ww)x=ww;
+			if(y<0)y=0;
+			if(y>wh)y=wh;
+			hero.x = x;
+			hero.y = y;
+		});
+	  
+		createEnemies();
+    }
+	
+	function createEnemies(){
+	    for(var i = 0;i<1+level*2;i++){
+		   enemies.push(new Enemy());
+		}
+	    levelel.innerHTML = level;
+	}
+	
+	
+	function Enemy(){
+       this.init();
+	}
+	
+	Enemy.prototype = {
+	   constructor:Enemy,
+	   init:function(){
+	       this.wh = Math.round(wh/2);
+	       var x = Math.floor(Math.random()*ww);
+		   if(x<40){
+		      x = Math.floor(Math.random()*50)+40;
+		   }else if(x>ww-40){
+		      x = ww-(Math.floor(Math.random()*50)+40);
+		   }
+		   var y = Math.floor(Math.random()*this.wh);
+		   if(y<40) y = Math.floor(Math.random()*50)+40;
+		   
+		   this.shape = new createjs.Shape();
+	       this.shape.graphics.beginFill('#ff0000').drawCircle(0,0,15);
+		   this.shape.x = x;
+		   this.shape.y = y;
+		   this.iv = 1;
+		   this.av = 5;
+		   this.attack = false;
+	       stage.addChildAt(this.shape,1);
+		   this.walkaround();
+	   },
+	   walkaround:function(){
+	       var dx = hero.x - this.shape.x;
+		   var dy = hero.y - this.shape.y;
+		   var radian = Math.atan2(dy,dx);
+		   this.vx = Math.cos(radian);
+		   this.vy = Math.sin(radian);
+		   this.walk();
+	   },
+	   walk:function(){
+	       this.raf  = requestAnimationFrame(this.walk.bind(this));
+		   this.watch();
+		   this.shape.x += this.vx*this.iv;
+		   this.shape.y += this.vy*this.iv;
+		   if(this.shape.x<0 || this.shape.x>ww || this.shape.y>wh){
+		      cancelAnimationFrame(this.raf);
+			  this.shape.parent.removeChild(this.shape);
+			  for(var i=0;i<enemies.length;i++){
+			     if(enemies[i]===this){
+				    enemies.splice(i,1);
+				    break;
+				 }
+			  }
+			  score+=10;
+			  scoreel.innerHTML = score;
+			  if(enemies.length<1){
+				  level++;
+				  setTimeout(function(){
+				  	 hero.x= Math.round(ww/2);
+	                 hero.y= wh-100;
+					 createEnemies();
+				  },500);
+			  }
+		   }
+	   },
+	   watch:function(){
+	       if(this.attack) return;
+	       var dx = hero.x - this.shape.x;
+		   var dy = hero.y - this.shape.y;
+		   var distance = Math.sqrt(dx*dx+dy*dy);
+		   if(distance<100){
+			  cancelAnimationFrame(this.raf);
+			  this.attack = true;
+			  var radian = Math.atan2(dy,dx);
+			  this.vx = Math.cos(radian);
+		      this.vy = Math.sin(radian);
+			  this.doattack();
+		   }
+		   
+		  if(this.shape.y>hero.y+100){
+              this.iv=5;
+		   }
+		   
+	   },
+	   doattack:function(){
+	       this.raf  = requestAnimationFrame(this.doattack.bind(this));
+	       this.shape.x += this.vx*this.av;
+		   this.shape.y += this.vy*this.av;
+		   
+		   if (Math.sqrt(Math.pow(this.shape.x - hero.x, 2) + Math.pow(this.shape.y - hero.y, 2)) <= 15 + 20) {
+		        gameover = true;
+		        enemies.forEach(function(enemy){
+				   cancelAnimationFrame(enemy.raf);
+				});
+				cancelAnimationFrame(bgraf);
+              	result.innerHTML = '分数:'+score;
+				setTimeout(function(){
+			      cover.style.display='block';
+				},600);
+           }   
+		   
+		   if(this.shape.x<0 || this.shape.x>ww || this.shape.y<0 || this.shape.y>wh){
+		      cancelAnimationFrame(this.raf);
+			  this.shape.parent.removeChild(this.shape);
+			  for(var i=0;i<enemies.length;i++){
+			     if(enemies[i]===this){
+				    enemies.splice(i,1);
+				    break;
+				 }
+			  }
+			  score+=10;
+			  scoreel.innerHTML = score;
+			  if(enemies.length<1){
+				  level++;
+				  setTimeout(function(){
+				  	 hero.x= Math.round(ww/2);
+	                 hero.y= wh-100;
+					 createEnemies();
+				  },800);
+			  }
+		   }
+	   }
+
+	}
+	
+    function restart(){
+	    hero.x= Math.round(ww/2);
+	    hero.y= wh-100;
+	    bgbox.y=0;
+	    score=0;
+		level=1;
+		gameover = false;
+	    scoreel.innerHTML = score;
+		cover.style.display='none';
+		window.runbg();
+		enemies.forEach(function(enemy){
+		   enemy.shape.parent.removeChild(enemy.shape);
+		});
+		enemies=[];
+		createEnemies();
+	}
+	
+   </script>
+  </body>
+</html>

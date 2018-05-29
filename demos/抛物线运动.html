@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style>
+	body{margin:0;}
+	canvas{display:block;background-color:rgba(255,255,0,.3);}
+	</style>
+  </head>
+  <body>
+   <div><button id="runbtn">run</button></div>
+   <canvas id="canvas" width="375" height="667"></div>
+   <script src="https://cdn.bootcss.com/EaselJS/1.0.2/easeljs.js"></script>
+   <script>
+    var stage = new createjs.Stage("canvas");
+    //创建一个形状的显示对象
+	var container = new createjs.Container();
+	container.x=0;
+	container.y=0;
+
+    var circle = new createjs.Shape();
+    circle.graphics.beginFill("red").drawCircle(0, 0, 10);
+    circle.x = 335/2;
+	circle.y = 667/2;
+
+	var end = new createjs.Shape();
+    end.graphics.beginFill("green").drawCircle(0, 0, 20);
+    end.x = 330;
+	end.y = 200;
+	container.addChild(end,circle);
+    stage.addChild(container);
+    //更新阶段将呈现下一帧
+    
+	createjs.Ticker.addEventListener("tick", function(){
+	   stage.update();
+	});
+	
+	//y=ax²+bx+c
+    //b = (y-ax2)/x
+	
+    var timer = null;
+	
+	function runa(){
+		var tx = end.x-circle.x;
+		var ty = end.y-circle.y;
+		var a = 0.001,c=0;
+		var b =(ty - a*tx*tx)/tx;
+		var max =20,min=0;
+		var ix = circle.x,iy=circle.y;
+		timer = setInterval(function(){
+				 var x = tx* min/max;
+				 min++;
+				 if (min > max) clearInterval(timer);
+				 var y = a * x * x + b * x;
+				 circle.x = ix+x;
+				 circle.y = iy+y;
+		},60);
+	}
+	
+	stage.on('stagemousedown',function(){
+	    this.tid = setInterval(function(){
+	        //end.scale+=0.01;
+	    },13);
+	});
+    stage.on('stagemouseup',function(){
+	    clearInterval(this.tid);
+		runa();
+	});
+   </script>
+  </body>
+</html>

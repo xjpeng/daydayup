@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index</title>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<style>
+	body{margin:0;}
+	canvas{display:block;background-color:rgba(255,255,0,.3);}
+	.scorebox{position:absolute;left:0;top:0;}
+	.cover{
+	   position:absolute;
+	   display:none;
+	   left:0;
+	   top:0;
+	   right:0;
+	   bottom:0;
+	   background-color:rgba(0,0,0,.5)
+	}
+	.inner{
+	   position:absolute;
+	   left:50%;
+	   top:50%;
+	   width:100px;
+	   height:100px;
+	   background-color:#fff;
+	   text-align:center;
+	   margin-left:-50px;
+	   margin-top:-50px;
+	}
+	
+	</style>
+  </head>
+  <body>
+   <canvas id="canvas" width="375" height="667"></canvas>
+   <div class="scorebox">Score:<span id="score">0</span></div>
+   <div class="cover" id="cover">
+      <div class="inner">
+      <p id="result">分数:</p>
+      <button onclick="restart();">重玩</button>
+	  </div>
+   </div>
+   <script src="https://cdn.bootcss.com/EaselJS/1.0.2/easeljs.js"></script>
+   <script>
+    var ww = window.innerWidth;
+    var wh = window.innerHeight;
+	var canvas = document.getElementById('canvas');
+	var scoreel = document.getElementById('score');
+	var cover = document.getElementById('cover');
+	var result = document.getElementById('result');
+    canvas.width=ww;
+	canvas.height=wh;
+    var stage = new createjs.Stage(canvas);
+	createjs.Touch.enable(stage);
+    //创建一个形状的显示对象
+
+	var box = new createjs.Container();
+	box.x = box.y = 0;
+	
+	
+	
+    var circle = new createjs.Shape();
+    circle.graphics.beginFill("red").drawCircle(0, 0, 20);
+    circle.x = 100;
+	circle.y = wh/2+50;
+	
+	box.addChild(circle);
+	stage.addChild(box);
+	
+	createjs.Ticker.addEventListener("tick", function(event){
+	   stage.update(event);
+	});
+	
+	var next_step = null;
+	var next_obj = null;
+	var pos_angle =0;
+	
+	function createStep(){
+	    var colors = ['#00a300','#9f00a7','#ffc40d','#2d89ef'];
+		var color = colors[Math.floor(Math.random()*colors.length)];
+		var radius = Math.ceil(Math.random()*15)+30;
+		var diameter = radius *2;
+		next_obj = new createjs.Container();
+		next_step = new createjs.Shape();
+		next_step.double = false;
+        next_step.graphics.beginFill(color).drawCircle(0, 0, radius);
+		if(radius<35){
+		  next_step.score = 5;
+		}else if(radius<40){
+		  next_step.score = 4;
+		}else if(radius<45){
+		  next_step.score = 3;
+		}else if(radius<50){
+		  next_step.score = 2;
+		}else{
+		  next_step.score = 1;
+		}
+		var x,y;
+		if(circle.x<ww-radius*4){
+		   pos_angle = 330;
+		   x = Math.floor(Math.random()*(ww-circle.x));
+		   next_step.x = circle.x+x;
+		   if(next_step.x>ww-diameter){
+		       next_step.x = ww-diameter;
+			   x = next_step.x-circle.x;
+		   }else if(next_step.x<circle.x+diameter){
+		       next_step.x = circle.x+diameter;
+			   x = next_step.x-circle.x;
+		   }
+		}else{
+		   pos_angle = 210;
+		   x = Math.floor(Math.random()*circle.x);
+		   next_step.x = circle.x-x;		   
+		   if(next_step.x>circle.x-diameter){
+		      next_step.x = circle.x-diameter;
+			  x = circle.x-next_step.x;
+		   }else if(next_step.x<diameter){
+		      next_step.x = diameter;
+			  x = circle.x-next_step.x;
+		   }
+		} 
+		y = Math.round(Math.abs(Math.tan(30*Math.PI/180)*x));
+		next_step.y = circle.y-y;
+		dy = y;
+		if(Math.abs(circle.x - next_step.x)>ww/2){
+		   var text = new createjs.Text("+ "+next_step.score+' x3', "16px Arial", "#ff0000");
+		   next_step.double = 3;
+		}else if(Math.abs(circle.x - next_step.x)>ww/3){
+		   var text = new createjs.Text("+ "+next_step.score+' x2', "16px Arial", "#ff0000");
+		   next_step.double = 2;
+		}else{
+		   var text = new createjs.Text("+ "+next_step.score, "16px Arial", "#ff0000");
+		   next_step.double = 1;
+		}
+		text.name = 'text';
+		text.visible = false;
+		text.x = next_step.x+radius;
+		text.y = next_step.y-radius;
+		next_obj.addChild(next_step,text);
+		box.addChildAt(next_obj,0);
+		vx = Math.cos(pos_angle*Math.PI/180);
+		vy = Math.sin(pos_angle*Math.PI/180);
+	}
+	
+	createStep();
+	//y=ax²+bx+c
+    //b = (y-ax2)/x
+	var vx;
+    var vy;
+	var dy;
+	var score=0;
+	var speed = 50;
+	var inix = circle.x;
+	var iniy = circle.y;
+	stage.on('stagemousedown',function(){
+	     this.mousedowning = true;
+         addspeed();
+	});
+    stage.on('stagemouseup',function(){
+        this.mousedowning = false;
+	    var ax = vx*speed;
+	    var ay = vy*speed;
+		var i=0;
+		var inid;
+		moving();
+		function moving(){
+		   if(i>30){
+		      cancelAnimationFrame(inid);
+			  inix = circle.x;
+	          iniy = circle.y;
+			  speed = 50;
+			  var p = box.localToGlobal(inix,iniy);
+			  var p2 = next_step.globalToLocal(p.x,p.y);
+			  if(next_step.hitTest(p2.x,p2.y)){
+			     score +=next_step.score*next_step.double;
+				 scoreel.innerHTML = score;
+				 var text = next_obj.getChildByName('text');
+				 text.visible = true;
+				 var fade = setInterval(function(){
+				    text.alpha-=0.1;
+					text.y-=1;
+					if(text.alpha<=0){
+					   clearInterval(fade);
+					   box.removeChildAt(0);
+						   createStep();
+						   var t1,ymax = box.y+dy;
+						   setTimeout(function(){
+							 t1 = setInterval(function(){
+								if(box.y>=ymax) clearInterval(t1);
+								box.y++;
+							 },13);
+							 
+						},300);
+					}
+				 },50);
+			  }else{
+			     result.innerHTML = '分数:'+score;
+			     cover.style.display='block';
+			  }
+		   }else{
+		      var ix = ax*(i/30);
+			  var iy = ay*(i/30);
+			  circle.x = inix+Math.round(ix);
+			  circle.y = iniy+ Math.round(iy);
+			  i++;
+			  inid = requestAnimationFrame(moving);
+			  if(circle.x>ww || circle.x<0){
+			     cancelAnimationFrame(inid);
+				 result.innerHTML = '分数:'+score;
+			     cover.style.display='block';
+			  }
+		   }
+		}
+		
+	});
+	
+	function addspeed(){
+	   if(stage.mousedowning){
+	   	  stage.raf = requestAnimationFrame(addspeed);
+	      speed+=3;
+	   }else{
+		   cancelAnimationFrame(stage.raf);
+	   }
+	}
+	
+	function restart(){
+	   circle.x = 100;
+	   circle.y = wh/2+50;
+	   inix = circle.x;
+	   iniy = circle.y;
+	   speed = 50;
+	   box.y=0;
+	   score=0;
+	   scoreel.innerHTML = score;
+		box.removeChildAt(0);
+		createStep();
+		cover.style.display='none';
+	}
+	
+	
+   </script>
+  </body>
+</html>
