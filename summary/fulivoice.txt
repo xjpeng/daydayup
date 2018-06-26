@@ -1,0 +1,24 @@
+项目功能
+基于微信实现录音上传分享
+
+微信视频播放
+
+自动播放
+1,不能自动播放.
+2,ios可以使用
+document.addEventListener("WeixinJSBridgeReady", function () {
+	video.play();
+}, false);
+3.android手机不支持,需要手动点击或者touch后才能播放
+
+多个媒体播放
+1,不能同时播放多个音视频,一次性只能播放一个
+2,多个声音可以合并成一个,然后用createjs.SoundJS分段播放
+
+vue-mugen-scroll
+第一次不自动加载
+<mugen-scroll :handler="fetchData" :should-handle="!loading && init" scroll-container="ranklist" v-show="!nodata">
+  loading...
+</mugen-scroll>
+手动加载第一次.改变init
+
